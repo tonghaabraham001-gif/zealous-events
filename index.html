@@ -569,7 +569,165 @@ deployment test -->
     .testimonial strong {
       font-size: 0.85rem;
     }
+/* =========================
+   REVIEW FEATURE
+========================= */
 
+.review-event {
+  display: block;
+  margin-top: 5px;
+  color: #8b6a2d;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.review-cta {
+  margin-top: 55px;
+  padding: 35px;
+  border: 1px solid #e5ddd0;
+  background: rgba(255,255,255,0.55);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+}
+
+.review-cta h3 {
+  font-family: "Playfair Display", serif;
+  font-size: 2rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.review-cta p {
+  color: #645c53;
+}
+
+.review-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 6%;
+  background: rgba(10, 8, 6, 0.92);
+  overflow-y: auto;
+}
+
+.review-modal.active {
+  display: flex;
+}
+
+.review-modal-content {
+  position: relative;
+  width: min(650px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--cream);
+  color: var(--dark);
+  padding: 45px;
+}
+
+.review-modal-content h2 {
+  font-family: "Playfair Display", serif;
+  font-size: clamp(2.3rem, 5vw, 4rem);
+  font-weight: 500;
+  line-height: 1;
+  margin-bottom: 15px;
+}
+
+.review-modal-intro {
+  color: #645c53;
+  margin-bottom: 30px;
+}
+
+.review-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 45px;
+  height: 45px;
+  border: 1px solid #d8cebf;
+  background: transparent;
+  color: var(--dark);
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.review-close:hover {
+  border-color: var(--gold);
+  color: #8b6a2d;
+}
+
+.review-modal .form-group label {
+  color: #645c53;
+}
+
+.review-modal .form-group input,
+.review-modal .form-group textarea,
+.review-modal .form-group select {
+  color: var(--dark);
+  border-color: #d8cebf;
+}
+
+.review-modal .form-group select option {
+  background: var(--cream);
+  color: var(--dark);
+}
+
+.rating-stars {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.rating-stars button {
+  border: none;
+  background: transparent;
+  color: #9b762e;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.rating-stars button:hover {
+  transform: scale(1.1);
+}
+
+.review-help {
+  display: block;
+  margin-top: 7px;
+  color: #756d63;
+  font-size: 0.75rem;
+}
+
+.review-message {
+  margin-top: 20px;
+  color: #8b6a2d;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+
+  .review-cta {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 28px 22px;
+  }
+
+  .review-modal {
+    padding: 20px 5%;
+  }
+
+  .review-modal-content {
+    padding: 35px 22px;
+  }
+
+}
     /* =========================
        CTA
     ========================== */
@@ -1342,62 +1500,255 @@ deployment test -->
 
 
     <!-- =========================
-         TESTIMONIALS
-    ========================== -->
+     CLIENT EXPERIENCES
+========================= -->
 
-    <section class="testimonials">
+<section class="testimonials" id="reviews">
 
-      <div class="container">
+  <div class="container">
 
-        <div class="section-label reveal">
-          Client Experiences
+    <div class="section-label reveal">
+      Client Experiences
+    </div>
+
+    <h2 class="section-title reveal">
+      Don't just take
+      our word for it.
+    </h2>
+
+    <p class="section-intro reveal">
+      Hear from people who trusted Zealous Events to create moments
+      worth remembering.
+    </p>
+
+    <div class="testimonial-grid" id="approvedReviews">
+
+      <article class="testimonial reveal">
+        <div class="stars">★★★★★</div>
+
+        <p>
+          "Everything felt beautifully organized. We were able to
+          enjoy our special day without worrying about the details."
+        </p>
+
+        <strong>— Happy Client</strong>
+        <span class="review-event">Wedding</span>
+      </article>
+
+      <article class="testimonial reveal">
+        <div class="stars">★★★★★</div>
+
+        <p>
+          "The decoration completely transformed the venue. Every
+          detail was carefully thought through."
+        </p>
+
+        <strong>— Wedding Client</strong>
+        <span class="review-event">Wedding</span>
+      </article>
+
+      <article class="testimonial reveal">
+        <div class="stars">★★★★★</div>
+
+        <p>
+          "Professional, creative and dependable. Zealous Events
+          delivered exactly the experience we wanted."
+        </p>
+
+        <strong>— Event Client</strong>
+        <span class="review-event">Celebration</span>
+      </article>
+
+    </div>
+
+    <!-- LEAVE A REVIEW -->
+
+    <div class="review-cta reveal">
+
+      <div>
+        <div class="section-label">
+          Your Experience Matters
         </div>
 
-        <h2 class="section-title reveal">
-          Don't just take
-          our word for it.
-        </h2>
+        <h3>
+          Had an experience with Zealous Events?
+        </h3>
 
-        <div class="testimonial-grid">
+        <p>
+          Share your experience and help others discover what we do.
+        </p>
+      </div>
 
-          <article class="testimonial reveal">
-            <div class="stars">★★★★★</div>
+      <button
+        class="btn btn-gold"
+        type="button"
+        id="openReviewBtn"
+      >
+        ⭐ Leave a Review
+      </button>
 
-            <p>
-              "Everything felt beautifully organized. We were able to
-              enjoy our special day without worrying about the details."
-            </p>
+    </div>
 
-            <strong>— Happy Client</strong>
-          </article>
+  </div>
 
-          <article class="testimonial reveal">
-            <div class="stars">★★★★★</div>
+</section>
 
-            <p>
-              "The decoration completely transformed the venue. Every
-              detail was carefully thought through."
-            </p>
 
-            <strong>— Wedding Client</strong>
-          </article>
+<!-- =========================
+     REVIEW MODAL
+========================= -->
 
-          <article class="testimonial reveal">
-            <div class="stars">★★★★★</div>
+<div
+  class="review-modal"
+  id="reviewModal"
+  aria-hidden="true"
+>
 
-            <p>
-              "Professional, creative and dependable. Zealous Events
-              delivered exactly the experience we wanted."
-            </p>
+  <div class="review-modal-content">
 
-            <strong>— Event Client</strong>
-          </article>
+    <button
+      class="review-close"
+      id="reviewClose"
+      type="button"
+      aria-label="Close review form"
+    >
+      ✕
+    </button>
 
-        </div>
+    <div class="section-label">
+      Client Experiences
+    </div>
+
+    <h2>
+      Share Your Experience
+    </h2>
+
+    <p class="review-modal-intro">
+      We'd love to hear about your experience with Zealous Events.
+    </p>
+
+    <form id="reviewForm">
+
+      <div class="form-group">
+
+        <label for="reviewName">
+          Your Name
+        </label>
+
+        <input
+          id="reviewName"
+          type="text"
+          placeholder="Enter your name"
+          required
+        />
 
       </div>
 
-    </section>
+
+      <div class="form-group">
+
+        <label for="reviewEvent">
+          Event Type
+        </label>
+
+        <select id="reviewEvent" required>
+
+          <option value="">
+            Select event type
+          </option>
+
+          <option>Wedding</option>
+          <option>Birthday</option>
+          <option>Corporate Event</option>
+          <option>Anniversary</option>
+          <option>Other Celebration</option>
+
+        </select>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label>
+          Your Rating
+        </label>
+
+        <div
+          class="rating-stars"
+          id="ratingStars"
+          aria-label="Choose your rating"
+        >
+
+          <button type="button" data-rating="1">☆</button>
+          <button type="button" data-rating="2">☆</button>
+          <button type="button" data-rating="3">☆</button>
+          <button type="button" data-rating="4">☆</button>
+          <button type="button" data-rating="5">☆</button>
+
+        </div>
+
+        <input
+          type="hidden"
+          id="reviewRating"
+          value=""
+          required
+        />
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="reviewMessage">
+          Your Experience
+        </label>
+
+        <textarea
+          id="reviewMessage"
+          placeholder="Tell us about your experience..."
+          required
+        ></textarea>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="reviewPhoto">
+          Optional Photo
+        </label>
+
+        <input
+          id="reviewPhoto"
+          type="file"
+          accept="image/*"
+        />
+
+        <small class="review-help">
+          You can add a photo from your event.
+        </small>
+
+      </div>
+
+
+      <button
+        class="btn btn-gold"
+        type="submit"
+      >
+        Submit Review →
+      </button>
+
+      <p
+        class="review-message"
+        id="reviewMessageStatus"
+      ></p>
+
+    </form>
+
+  </div>
+
+</div>
 
 
     <!-- =========================
@@ -1814,6 +2165,121 @@ deployment test -->
       }
 
     });
+  /* =========================
+   REVIEW FORM
+========================= */
+
+const reviewModal = document.getElementById("reviewModal");
+const openReviewBtn = document.getElementById("openReviewBtn");
+const reviewClose = document.getElementById("reviewClose");
+const reviewForm = document.getElementById("reviewForm");
+const reviewRating = document.getElementById("reviewRating");
+const reviewMessageStatus =
+  document.getElementById("reviewMessageStatus");
+
+const ratingButtons =
+  document.querySelectorAll(".rating-stars button");
+
+
+/* Open review form */
+
+openReviewBtn.addEventListener("click", () => {
+
+  reviewModal.classList.add("active");
+  reviewModal.setAttribute("aria-hidden", "false");
+
+  document.body.style.overflow = "hidden";
+
+});
+
+
+/* Close review form */
+
+function closeReviewModal() {
+
+  reviewModal.classList.remove("active");
+  reviewModal.setAttribute("aria-hidden", "true");
+
+  document.body.style.overflow = "";
+
+}
+
+
+reviewClose.addEventListener("click", closeReviewModal);
+
+
+/* Close when clicking outside */
+
+reviewModal.addEventListener("click", (event) => {
+
+  if (event.target === reviewModal) {
+    closeReviewModal();
+  }
+
+});
+
+
+/* Close with Escape */
+
+document.addEventListener("keydown", (event) => {
+
+  if (
+    event.key === "Escape" &&
+    reviewModal.classList.contains("active")
+  ) {
+    closeReviewModal();
+  }
+
+});
+
+
+/* Star rating */
+
+ratingButtons.forEach(button => {
+
+  button.addEventListener("click", () => {
+
+    const selectedRating =
+      Number(button.dataset.rating);
+
+    reviewRating.value = selectedRating;
+
+    ratingButtons.forEach(star => {
+
+      const starRating =
+        Number(star.dataset.rating);
+
+      star.textContent =
+        starRating <= selectedRating
+          ? "★"
+          : "☆";
+
+    });
+
+  });
+
+});
+
+
+/* Review submission — temporary */
+
+reviewForm.addEventListener("submit", (event) => {
+
+  event.preventDefault();
+
+  if (!reviewRating.value) {
+
+    reviewMessageStatus.textContent =
+      "Please select a rating.";
+
+    return;
+
+  }
+
+  reviewMessageStatus.textContent =
+    "Thank you! Your review has been received and will be reviewed before appearing on our website.";
+
+});
   </script>
 
 </body>
