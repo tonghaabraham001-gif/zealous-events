@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "zealous-events",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-29",
+ "assets": {
+  "directory": "./public",
+  "binding": "ASSETS"
+},
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "zealous-reviews",
+      "database_id": "7042bd17-b9c3-4b33-94ab-5b3b9390da49"
+    }
+  ]
+}

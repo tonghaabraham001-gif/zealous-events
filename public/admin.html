@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Zealous Events | Review Admin</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #172033;
+    }
+
+    header {
+      background: #111827;
+      color: white;
+      padding: 22px 24px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      opacity: 0.75;
+      font-size: 14px;
+    }
+
+    main {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #d5dbe7;
+      border-radius: 8px;
+      font-size: 15px;
+      margin-top: 8px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .primary {
+      background: #111827;
+      color: white;
+      margin-top: 12px;
+    }
+
+    .approve {
+      background: #16803c;
+      color: white;
+    }
+
+    .reject {
+      background: #c62828;
+      color: white;
+    }
+
+    .logout {
+      background: #e5e7eb;
+      color: #111827;
+      float: right;
+    }
+
+    .status {
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    .review {
+      border: 1px solid #e3e7ee;
+      border-radius: 12px;
+      padding: 18px;
+      margin-top: 14px;
+    }
+
+    .review h3 {
+      margin: 0 0 6px;
+    }
+
+    .stars {
+      letter-spacing: 2px;
+      margin: 8px 0;
+    }
+
+    .review-text {
+      line-height: 1.6;
+      color: #414b5f;
+    }
+
+    .meta {
+      color: #6b7280;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .empty {
+      text-align: center;
+      color: #6b7280;
+      padding: 30px 10px;
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        padding: 18px;
+      }
+
+      .logout {
+        float: none;
+        margin-top: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <button id="logoutButton" class="logout hidden">Log Out</button>
+
+    <h1>Zealous Events</h1>
+    <p>Review Moderation</p>
+  </header>
+
+  <main>
+
+    <!-- LOGIN -->
+    <section id="loginCard" class="card">
+      <h2>Admin Login</h2>
+
+      <p>
+        Enter your private admin token to manage customer reviews.
+      </p>
+
+      <label for="adminToken">Admin Token</label>
+      <input
+        id="adminToken"
+        type="password"
+        autocomplete="off"
+        placeholder="Enter admin token"
+      >
+
+      <button id="loginButton" class="primary">
+        Access Reviews
+      </button>
+
+      <div id="loginStatus" class="status"></div>
+    </section>
+
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="hidden">
+
+      <div class="card">
+        <h2>Pending Reviews</h2>
+        <p>Approve reviews you want customers to see on the website.</p>
+
+        <button id="refreshButton" class="primary">
+          Refresh Reviews
+        </button>
+
+        <div id="dashboardStatus" class="status"></div>
+      </div>
+
+      <div id="reviewsContainer" class="card"></div>
+
+    </section>
+
+  </main>
+
+
+  <script>
+    const API_BASE = "/api";
+
+    let adminToken = "";
+
+    const loginCard = document.getElementById("loginCard");
+    const dashboard = document.getElementById("dashboard");
+    const adminTokenInput = document.getElementById("adminToken");
+    const loginButton = document.getElementById("loginButton");
+    const loginStatus = document.getElementById("loginStatus");
+    const logoutButton = document.getElementById("logoutButton");
+    const refreshButton = document.getElementById("refreshButton");
+    const dashboardStatus = document.getElementById("dashboardStatus");
+    const reviewsContainer = document.getElementById("reviewsContainer");
+
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+
+    function showDashboard() {
+      loginCard.classList.add("hidden");
+      dashboard.classList.remove("hidden");
+      logoutButton.classList.remove("hidden");
+    }
+
+
+    function showLogin() {
+      loginCard.classList.remove("hidden");
+      dashboard.classList.add("hidden");
+      logoutButton.classList.add("hidden");
+    }
+
+
+    function stars(rating) {
+      const value = Number(rating);
+
+      return "★".repeat(value) + "☆".repeat(5 - value);
+    }
+
+
+    async function loadPendingReviews() {
+      dashboardStatus.textContent = "Loading reviews...";
+      reviewsContainer.innerHTML = "";
+
+      try {
+        const response = await fetch(
+          `${API_BASE}/admin/reviews?status=pending`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${adminToken}`
+            }
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Unable to load reviews.");
+        }
+
+        dashboardStatus.textContent =
+          `${data.reviews.length} pending review${data.reviews.length === 1 ? "" : "s"}.`;
+
+        if (!data.reviews.length) {
+          reviewsContainer.innerHTML = `
+            <div class="empty">
+              No pending reviews right now.
+            </div>
+          `;
+          return;
+        }
+
+        reviewsContainer.innerHTML = data.reviews.map(review => `
+          <article class="review">
+            <h3>${escapeHtml(review.name)}</h3>
+
+            <div class="stars" aria-label="${Number(review.rating)} out of 5 stars">
+              ${stars(review.rating)}
+            </div>
+
+            <div class="meta">
+              Event: ${escapeHtml(review.event_type)}
+            </div>
+
+            <p class="review-text">
+              ${escapeHtml(review.review)}
+            </p>
+
+            <div class="meta">
+              Submitted: ${escapeHtml(review.created_at)}
+            </div>
+
+            <div class="actions">
+              <button
+                class="approve"
+                data-id="${Number(review.id)}"
+                data-action="approved"
+              >
+                Approve
+              </button>
+
+              <button
+                class="reject"
+                data-id="${Number(review.id)}"
+                data-action="rejected"
+              >
+                Reject
+              </button>
+            </div>
+          </article>
+        `).join("");
+
+      } catch (error) {
+        dashboardStatus.textContent = error.message;
+        reviewsContainer.innerHTML = "";
+      }
+    }
+
+
+    async function updateReview(id, status) {
+      try {
+        const response = await fetch(
+          `${API_BASE}/admin/reviews/${id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${adminToken}`
+            },
+            body: JSON.stringify({ status })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Unable to update review.");
+        }
+
+        await loadPendingReviews();
+
+      } catch (error) {
+        dashboardStatus.textContent = error.message;
+      }
+    }
+
+
+    loginButton.addEventListener("click", async () => {
+      const token = adminTokenInput.value.trim();
+
+      if (!token) {
+        loginStatus.textContent = "Please enter your admin token.";
+        return;
+      }
+
+      adminToken = token;
+      loginStatus.textContent = "Checking token...";
+
+      try {
+        const response = await fetch(
+          `${API_BASE}/admin/reviews?status=pending`,
+          {
+            headers: {
+              Authorization: `Bearer ${adminToken}`
+            }
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Authentication failed.");
+        }
+
+        loginStatus.textContent = "";
+
+        showDashboard();
+
+        dashboardStatus.textContent =
+          `${data.reviews.length} pending review${data.reviews.length === 1 ? "" : "s"}.`;
+
+        if (!data.reviews.length) {
+          reviewsContainer.innerHTML = `
+            <div class="empty">
+              No pending reviews right now.
+            </div>
+          `;
+        } else {
+          await loadPendingReviews();
+        }
+
+      } catch (error) {
+        adminToken = "";
+        loginStatus.textContent = error.message;
+      }
+    });
+
+
+    refreshButton.addEventListener("click", loadPendingReviews);
+
+
+    logoutButton.addEventListener("click", () => {
+      adminToken = "";
+      adminTokenInput.value = "";
+      loginStatus.textContent = "";
+      dashboardStatus.textContent = "";
+      reviewsContainer.innerHTML = "";
+      showLogin();
+    });
+
+
+    reviewsContainer.addEventListener("click", async (event) => {
+      const button = event.target.closest("button[data-action]");
+
+      if (!button) {
+        return;
+      }
+
+      const id = Number(button.dataset.id);
+      const status = button.dataset.action;
+
+      if (!id || !["approved", "rejected"].includes(status)) {
+        return;
+      }
+
+      button.disabled = true;
+
+      await updateReview(id, status);
+    });
+  </script>
+
+</body>
+</html>

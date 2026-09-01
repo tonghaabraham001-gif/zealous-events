@@ -569,6 +569,28 @@ deployment test -->
     .testimonial strong {
       font-size: 0.85rem;
     }
+    .review-empty {
+  grid-column: 1 / -1;
+  background: white;
+  padding: 45px;
+  border: 1px solid #e5ddd0;
+  text-align: center;
+}
+
+.review-empty .stars {
+  margin-bottom: 18px;
+}
+
+.review-empty p {
+  color: #5f584f;
+  font-family: "Playfair Display", serif;
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+}
+
+.review-empty strong {
+  font-size: 0.85rem;
+}
 /* =========================
    REVIEW FEATURE
 ========================= */
@@ -1522,44 +1544,7 @@ deployment test -->
     </p>
 
     <div class="testimonial-grid" id="approvedReviews">
-
-      <article class="testimonial reveal">
-        <div class="stars">★★★★★</div>
-
-        <p>
-          "Everything felt beautifully organized. We were able to
-          enjoy our special day without worrying about the details."
-        </p>
-
-        <strong>— Happy Client</strong>
-        <span class="review-event">Wedding</span>
-      </article>
-
-      <article class="testimonial reveal">
-        <div class="stars">★★★★★</div>
-
-        <p>
-          "The decoration completely transformed the venue. Every
-          detail was carefully thought through."
-        </p>
-
-        <strong>— Wedding Client</strong>
-        <span class="review-event">Wedding</span>
-      </article>
-
-      <article class="testimonial reveal">
-        <div class="stars">★★★★★</div>
-
-        <p>
-          "Professional, creative and dependable. Zealous Events
-          delivered exactly the experience we wanted."
-        </p>
-
-        <strong>— Event Client</strong>
-        <span class="review-event">Celebration</span>
-      </article>
-
-    </div>
+</div>
 
     <!-- LEAVE A REVIEW -->
 
@@ -2259,28 +2244,115 @@ ratingButtons.forEach(button => {
   });
 
 });
+  
+/* Review submission */
 
+/* =========================
+   LOAD APPROVED REVIEWS
+========================= */
 
-/* Review submission — temporary */
+async function loadApprovedReviews() {
 
-reviewForm.addEventListener("submit", (event) => {
+  const reviewsContainer =
+    document.getElementById("approvedReviews");
 
-  event.preventDefault();
-
-  if (!reviewRating.value) {
-
-    reviewMessageStatus.textContent =
-      "Please select a rating.";
-
+  if (!reviewsContainer) {
     return;
-
   }
 
-  reviewMessageStatus.textContent =
-    "Thank you! Your review has been received and will be reviewed before appearing on our website.";
+  try {
 
-});
-  </script>
+    const response =
+      await fetch("/api/reviews");
 
+    const result =
+      await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.message || "Unable to load reviews."
+      );
+    }
+
+    if (!result.reviews.length) {
+  reviewsContainer.innerHTML = `
+    <div class="review-empty reveal">
+      <div class="stars">★★★★★</div>
+      <p>
+        Be the first to share your experience with Zealous Events.
+      </p>
+      <strong>We'd love to hear from you.</strong>
+    </div>
+  `;
+
+  observer.observe(
+    reviewsContainer.querySelector(".review-empty")
+  );
+
+  return;
+}
+
+    reviewsContainer.innerHTML =
+      result.reviews.map(review => {
+
+        const stars =
+          "★".repeat(Number(review.rating)) +
+          "☆".repeat(5 - Number(review.rating));
+
+        return `
+          <article class="testimonial reveal">
+            <div class="stars">${stars}</div>
+
+            <p>
+              "${escapeHtml(review.review)}"
+            </p>
+
+            <strong>
+              — ${escapeHtml(review.name)}
+            </strong>
+
+            <span class="review-event">
+              ${escapeHtml(review.event_type)}
+            </span>
+          </article>
+        `;
+
+      }).join("");
+
+    reviewsContainer
+      .querySelectorAll(".reveal")
+      .forEach(element => {
+        observer.observe(element);
+      });
+
+  } catch (error) {
+
+    console.error(
+      "Approved reviews loading error:",
+      error
+    );
+
+  }
+}
+
+
+/* Prevent review text from injecting HTML */
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
+
+/* Load reviews when page opens */
+
+loadApprovedReviews();
+</script>
 </body>
 </html>
