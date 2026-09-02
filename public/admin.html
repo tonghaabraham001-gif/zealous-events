@@ -278,6 +278,33 @@
 
         <button id="refreshButton" class="primary">
           Refresh Reviews
+        <div class="filter-buttons">
+
+  <button
+    type="button"
+    class="filter-btn active"
+    data-review-status="pending"
+  >
+    Pending
+  </button>
+
+  <button
+    type="button"
+    class="filter-btn"
+    data-review-status="approved"
+  >
+    Approved
+  </button>
+
+  <button
+    type="button"
+    class="filter-btn"
+    data-review-status="rejected"
+  >
+    Rejected
+  </button>
+
+</div>
         </button>
 
         <div id="dashboardStatus" class="status"></div>
@@ -394,87 +421,116 @@ const approvedReviewsCount =
 
       return "★".repeat(value) + "☆".repeat(5 - value);
     }
+async function loadPendingReviews(status = "pending") {
 
+  dashboardStatus.textContent = "Loading reviews...";
+  reviewsContainer.innerHTML = "";
 
-    async function loadPendingReviews() {
-      dashboardStatus.textContent = "Loading reviews...";
-      reviewsContainer.innerHTML = "";
+  try {
 
-      try {
-        const response = await fetch(
-          `${API_BASE}/admin/reviews?status=pending`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${adminToken}`
-            }
-          }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-          throw new Error(data.message || "Unable to load reviews.");
+    const response = await fetch(
+      `${API_BASE}/admin/reviews?status=${encodeURIComponent(status)}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${adminToken}`
         }
-
-        dashboardStatus.textContent =
-          `${data.reviews.length} pending review${data.reviews.length === 1 ? "" : "s"}.`;
-
-        if (!data.reviews.length) {
-          reviewsContainer.innerHTML = `
-            <div class="empty">
-              No pending reviews right now.
-            </div>
-          `;
-          return;
-        }
-
-        reviewsContainer.innerHTML = data.reviews.map(review => `
-          <article class="review">
-            <h3>${escapeHtml(review.name)}</h3>
-
-            <div class="stars" aria-label="${Number(review.rating)} out of 5 stars">
-              ${stars(review.rating)}
-            </div>
-
-            <div class="meta">
-              Event: ${escapeHtml(review.event_type)}
-            </div>
-
-            <p class="review-text">
-              ${escapeHtml(review.review)}
-            </p>
-
-            <div class="meta">
-              Submitted: ${escapeHtml(review.created_at)}
-            </div>
-
-            <div class="actions">
-              <button
-                class="approve"
-                data-id="${Number(review.id)}"
-                data-action="approved"
-              >
-                Approve
-              </button>
-
-              <button
-                class="reject"
-                data-id="${Number(review.id)}"
-                data-action="rejected"
-              >
-                Reject
-              </button>
-            </div>
-          </article>
-        `).join("");
-
-      } catch (error) {
-        dashboardStatus.textContent = error.message;
-        reviewsContainer.innerHTML = "";
       }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Unable to load reviews."
+      );
     }
 
+    dashboardStatus.textContent =
+      `${data.reviews.length} ${status} review${
+        data.reviews.length === 1 ? "" : "s"
+      }.`;
+
+    if (!data.reviews.length) {
+      reviewsContainer.innerHTML = `
+        <div class="empty">
+          No ${status} reviews right now.
+        </div>
+      `;
+      return;
+    }
+
+    reviewsContainer.innerHTML =
+      data.reviews.map(review => `
+
+        <article class="review">
+
+          <h3>
+            ${escapeHtml(review.name)}
+          </h3>
+
+          <div
+            class="stars"
+            aria-label="${Number(review.rating)} out of 5 stars"
+          >
+            ${stars(review.rating)}
+          </div>
+
+          <div class="meta">
+            Event:
+            ${escapeHtml(review.event_type)}
+          </div>
+
+          <p class="review-text">
+            ${escapeHtml(review.review)}
+          </p>
+
+          <div class="meta">
+            Submitted:
+            ${escapeHtml(review.created_at)}
+          </div>
+
+          ${
+            status === "pending"
+              ? `
+                <div class="actions">
+
+                  <button
+                    class="approve review-action"
+                    data-id="${Number(review.id)}"
+                    data-status="approved"
+                  >
+                    Approve
+                  </button>
+
+                  <button
+                    class="reject review-action"
+                    data-id="${Number(review.id)}"
+                    data-status="rejected"
+                  >
+                    Reject
+                  </button>
+
+                </div>
+              `
+              : ""
+          }
+
+        </article>
+
+      `).join("");
+
+  } catch (error) {
+
+    dashboardStatus.textContent =
+      error.message;
+
+    reviewsContainer.innerHTML = "";
+
+  }
+}
+
+    
     async function updateReview(id, status) {
       try {
         const response = await fetch(
@@ -516,7 +572,7 @@ const approvedReviewsCount =
 
       try {
         const response = await fetch(
-          `${API_BASE}/admin/reviews?status=pending`,
+          `${API_BASE}/admin/reviews?status=${encodeURIComponent(status)}`,
           {
             headers: {
               Authorization: `Bearer ${adminToken}`
@@ -555,7 +611,35 @@ loadNewEnquiries();
     });
 
 
-    refreshButton.addEventListener("click", loadPendingReviews);
+    refreshButton.addEventListener(
+  "click",
+  () => loadPendingReviews(
+    document.querySelector(
+      "[data-review-status].active"
+    )?.dataset.reviewStatus || "pending"
+  )
+);
+document.querySelectorAll("[data-review-status]")
+  .forEach(button => {
+
+    button.addEventListener("click", () => {
+
+      document
+        .querySelectorAll("[data-review-status]")
+        .forEach(btn => {
+          btn.classList.remove("active");
+        });
+
+      button.classList.add("active");
+
+      const status =
+        button.dataset.reviewStatus;
+
+      loadPendingReviews(status);
+
+    });
+
+  });
 refreshEnquiriesButton.addEventListener(
   "click",
   () => loadNewEnquiries(
