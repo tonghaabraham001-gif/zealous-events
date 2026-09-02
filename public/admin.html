@@ -201,7 +201,23 @@
       </div>
 
       <div id="reviewsContainer" class="card"></div>
+      <!-- ENQUIRIES -->
 
+      <div class="card">
+        <h2>Customer Enquiries</h2>
+
+        <p>
+          View and manage enquiries submitted through the website.
+        </p>
+
+        <button id="refreshEnquiriesButton" class="primary">
+          Refresh Enquiries
+        </button>
+
+        <div id="enquiriesStatus" class="status"></div>
+      </div>
+
+      <div id="enquiriesContainer" class="card"></div>
     </section>
 
   </main>
@@ -221,7 +237,14 @@
     const refreshButton = document.getElementById("refreshButton");
     const dashboardStatus = document.getElementById("dashboardStatus");
     const reviewsContainer = document.getElementById("reviewsContainer");
+const refreshEnquiriesButton =
+  document.getElementById("refreshEnquiriesButton");
 
+const enquiriesStatus =
+  document.getElementById("enquiriesStatus");
+
+const enquiriesContainer =
+  document.getElementById("enquiriesContainer");
 
     function escapeHtml(value) {
       return String(value)
@@ -332,7 +355,99 @@
         reviewsContainer.innerHTML = "";
       }
     }
+async function loadNewEnquiries() {
 
+  enquiriesStatus.textContent = "Loading enquiries...";
+  enquiriesContainer.innerHTML = "";
+
+  try {
+
+    const response = await fetch(
+      `${API_BASE}/admin/enquiries?status=new`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${adminToken}`
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Unable to load enquiries."
+      );
+    }
+
+    enquiriesStatus.textContent =
+      `${data.enquiries.length} new ${data.enquiries.length === 1 ? "enquiry" : "enquiries"}.`;
+
+    if (!data.enquiries.length) {
+      enquiriesContainer.innerHTML = `
+        <div class="empty">
+          No new enquiries right now.
+        </div>
+      `;
+      return;
+    }
+
+    enquiriesContainer.innerHTML = data.enquiries.map(enquiry => `
+      <article class="review">
+
+        <h3>${escapeHtml(enquiry.name)}</h3>
+
+        <div class="meta">
+          Phone / WhatsApp:
+          <a href="tel:${escapeHtml(enquiry.phone)}">
+            ${escapeHtml(enquiry.phone)}
+          </a>
+        </div>
+
+        <div class="meta">
+          Event: ${escapeHtml(enquiry.event_type)}
+        </div>
+
+        <p class="review-text">
+          ${escapeHtml(enquiry.message)}
+        </p>
+
+        <div class="meta">
+          Submitted: ${escapeHtml(enquiry.created_at)}
+        </div>
+
+        <div class="actions">
+
+          <button
+            class="approve enquiry-action"
+            data-id="${Number(enquiry.id)}"
+            data-status="contacted"
+          >
+            Mark Contacted
+          </button>
+
+          <button
+            class="reject enquiry-action"
+            data-id="${Number(enquiry.id)}"
+            data-status="closed"
+          >
+            Close
+          </button>
+
+        </div>
+
+      </article>
+    `).join("");
+
+  } catch (error) {
+
+    enquiriesStatus.textContent =
+      error.message;
+
+    enquiriesContainer.innerHTML = "";
+
+  }
+}
 
     async function updateReview(id, status) {
       try {
@@ -392,7 +507,7 @@
         loginStatus.textContent = "";
 
         showDashboard();
-
+loadNewEnquiries();
         dashboardStatus.textContent =
           `${data.reviews.length} pending review${data.reviews.length === 1 ? "" : "s"}.`;
 
@@ -414,7 +529,10 @@
 
 
     refreshButton.addEventListener("click", loadPendingReviews);
-
+refreshEnquiriesButton.addEventListener(
+  "click",
+  loadNewEnquiries
+);
 
     logoutButton.addEventListener("click", () => {
       adminToken = "";
@@ -444,6 +562,61 @@
 
       await updateReview(id, status);
     });
+  enquiriesContainer.addEventListener("click", async (event) => {
+
+  const button =
+    event.target.closest(".enquiry-action");
+
+  if (!button) {
+    return;
+  }
+
+  const id = Number(button.dataset.id);
+  const status = button.dataset.status;
+
+  if (
+    !id ||
+    !["contacted", "closed"].includes(status)
+  ) {
+    return;
+  }
+
+  button.disabled = true;
+
+  try {
+
+    const response = await fetch(
+      `${API_BASE}/admin/enquiries/${id}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ status })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Unable to update enquiry."
+      );
+    }
+
+    await loadNewEnquiries();
+
+  } catch (error) {
+
+    enquiriesStatus.textContent =
+      error.message;
+
+    button.disabled = false;
+
+  }
+
+});
   </script>
 
 </body>

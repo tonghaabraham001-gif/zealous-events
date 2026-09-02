@@ -2011,32 +2011,69 @@ deployment test -->
       new Date().getFullYear();
 
 
-    /* Contact form */
+   /* Contact form */
 
-    document.getElementById("eventForm").addEventListener("submit", function(e) {
+document.getElementById("eventForm").addEventListener("submit", async function(e) {
 
-      e.preventDefault();
+  e.preventDefault();
 
-      const name = document.getElementById("name").value;
-      const phone = document.getElementById("phone").value;
-      const eventType = document.getElementById("event").value;
-      const message = document.getElementById("message").value;
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const eventType = document.getElementById("event").value;
+  const message = document.getElementById("message").value.trim();
 
-     
-     const whatsappNumber = "2348034266012";
-      const text =
-        `Hello Zealous Events.%0A%0A` +
-        `My name is ${encodeURIComponent(name)}.%0A` +
-        `Phone: ${encodeURIComponent(phone)}%0A` +
-        `Event: ${encodeURIComponent(eventType)}%0A%0A` +
-        `Event details:%0A${encodeURIComponent(message)}`;
+  const whatsappNumber = "2348034266012";
 
-      window.open(
-        `https://wa.me/${whatsappNumber}?text=${text}`,
-        "_blank"
-      );
+  try {
 
+    /* Save enquiry to D1 */
+
+    const response = await fetch("/api/enquiries", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name,
+        phone,
+        eventType,
+        message
+      })
     });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.message || "Unable to save your enquiry."
+      );
+    }
+
+    /* Open WhatsApp */
+
+    const text =
+      `Hello Zealous Events.%0A%0A` +
+      `My name is ${encodeURIComponent(name)}.%0A` +
+      `Phone: ${encodeURIComponent(phone)}%0A` +
+      `Event: ${encodeURIComponent(eventType)}%0A%0A` +
+      `Event details:%0A${encodeURIComponent(message)}`;
+
+    window.open(
+      `https://wa.me/${whatsappNumber}?text=${text}`,
+      "_blank"
+    );
+
+  } catch (error) {
+
+    console.error("Enquiry submission error:", error);
+
+    alert(
+      "Sorry, we couldn't submit your enquiry. Please try again."
+    );
+
+  }
+
+});
 /* =========================
        GALLERY MODAL
     ========================== */
