@@ -279,6 +279,70 @@ export default {
         );
       }
     }
+        // =========================
+    // ADMIN: DASHBOARD STATS
+    // =========================
+    if (
+      url.pathname === "/api/admin/stats" &&
+      request.method === "GET"
+    ) {
+      if (!isAdmin(request, env)) {
+        return unauthorizedResponse();
+      }
+
+      try {
+        const [
+          pendingReviews,
+          approvedReviews,
+          newEnquiries,
+          contactedEnquiries,
+        ] = await Promise.all([
+          env.DB.prepare(
+            `SELECT COUNT(*) AS count
+             FROM reviews
+             WHERE status = 'pending'`
+          ).first(),
+
+          env.DB.prepare(
+            `SELECT COUNT(*) AS count
+             FROM reviews
+             WHERE status = 'approved'`
+          ).first(),
+
+          env.DB.prepare(
+            `SELECT COUNT(*) AS count
+             FROM enquiries
+             WHERE status = 'new'`
+          ).first(),
+
+          env.DB.prepare(
+            `SELECT COUNT(*) AS count
+             FROM enquiries
+             WHERE status = 'contacted'`
+          ).first(),
+        ]);
+
+        return Response.json({
+          success: true,
+          stats: {
+            pendingReviews: Number(pendingReviews?.count || 0),
+            approvedReviews: Number(approvedReviews?.count || 0),
+            newEnquiries: Number(newEnquiries?.count || 0),
+            contactedEnquiries: Number(contactedEnquiries?.count || 0),
+          },
+        });
+      } catch (error) {
+        console.error("Admin dashboard stats error:", error);
+
+        return Response.json(
+          {
+            success: false,
+            message: "Unable to load dashboard statistics.",
+          },
+          { status: 500 }
+        );
+      }
+    }
     // =========================
     // ADMIN: GET REVIEWS
     // =========================

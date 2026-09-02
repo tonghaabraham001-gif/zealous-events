@@ -147,7 +147,45 @@
         float: none;
         margin-top: 12px;
       }
-    }
+    } 
+    .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+}
+
+.stat-card span {
+  display: block;
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.stat-card strong {
+  display: block;
+  font-size: 30px;
+  line-height: 1;
+}
+
+@media (max-width: 800px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
   </style>
 </head>
 
@@ -188,7 +226,29 @@
 
     <!-- DASHBOARD -->
     <section id="dashboard" class="hidden">
+<div class="stats-grid">
 
+  <div class="stat-card">
+    <span>New Enquiries</span>
+    <strong id="newEnquiriesCount">0</strong>
+  </div>
+
+  <div class="stat-card">
+    <span>Contacted</span>
+    <strong id="contactedEnquiriesCount">0</strong>
+  </div>
+
+  <div class="stat-card">
+    <span>Pending Reviews</span>
+    <strong id="pendingReviewsCount">0</strong>
+  </div>
+
+  <div class="stat-card">
+    <span>Approved Reviews</span>
+    <strong id="approvedReviewsCount">0</strong>
+  </div>
+
+</div>
       <div class="card">
         <h2>Pending Reviews</h2>
         <p>Approve reviews you want customers to see on the website.</p>
@@ -226,7 +286,7 @@
   <script>
     const API_BASE = "/api";
 
-    let adminToken = "";
+    let adminToptken = "";
 
     const loginCard = document.getElementById("loginCard");
     const dashboard = document.getElementById("dashboard");
@@ -245,7 +305,17 @@ const enquiriesStatus =
 
 const enquiriesContainer =
   document.getElementById("enquiriesContainer");
+   const newEnquiriesCount =
+  document.getElementById("newEnquiriesCount");
 
+const contactedEnquiriesCount =
+  document.getElementById("contactedEnquiriesCount");
+
+const pendingReviewsCount =
+  document.getElementById("pendingReviewsCount");
+
+const approvedReviewsCount =
+  document.getElementById("approvedReviewsCount");
     function escapeHtml(value) {
       return String(value)
         .replaceAll("&", "&amp;")
@@ -507,6 +577,7 @@ async function loadNewEnquiries() {
         loginStatus.textContent = "";
 
         showDashboard();
+        loadDashboardStats();
 loadNewEnquiries();
         dashboardStatus.textContent =
           `${data.reviews.length} pending review${data.reviews.length === 1 ? "" : "s"}.`;
@@ -533,7 +604,49 @@ refreshEnquiriesButton.addEventListener(
   "click",
   loadNewEnquiries
 );
+async function loadDashboardStats() {
 
+  try {
+
+    const response = await fetch(
+      `${API_BASE}/admin/stats`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${adminToken}`
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Unable to load dashboard statistics."
+      );
+    }
+
+    newEnquiriesCount.textContent =
+      data.stats.newEnquiries;
+
+    contactedEnquiriesCount.textContent =
+      data.stats.contactedEnquiries;
+
+    pendingReviewsCount.textContent =
+      data.stats.pendingReviews;
+
+    approvedReviewsCount.textContent =
+      data.stats.approvedReviews;
+
+  } catch (error) {
+
+    console.error(
+      "Dashboard statistics error:",
+      error
+    );
+
+  }
+}
     logoutButton.addEventListener("click", () => {
       adminToken = "";
       adminTokenInput.value = "";
